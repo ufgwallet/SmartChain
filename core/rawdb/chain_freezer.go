@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/rawdb/eradb"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
@@ -56,7 +57,7 @@ type chainFreezer struct {
 //     state freezer (e.g. dev mode).
 //   - if non-empty directory is given, initializes the regular file-based
 //     state freezer.
-func newChainFreezer(datadir string, namespace string, readonly bool) (*chainFreezer, error) {
+func newChainFreezer(datadir string, namespace string, readonly bool, eraDir string) (*chainFreezer, error) {
 	var (
 		err     error
 		freezer ethdb.AncientStore
@@ -64,7 +65,16 @@ func newChainFreezer(datadir string, namespace string, readonly bool) (*chainFre
 	if datadir == "" {
 		freezer = NewMemoryFreezer(readonly, chainFreezerTableConfigs)
 	} else {
-		freezer, err = NewFreezer(datadir, namespace, readonly, freezerTableSize, chainFreezerTableConfigs)
+		// Instantiate eradb outside of freezer to avoid
+		// creating an instance for the state freezer.
+		var edb *eradb.EraDatabase
+		if eraDir != "" {
+			edb, err = eradb.New(eraDir)
+			if err != nil {
+				return nil, err
+			}
+		}
+		freezer, err = NewFreezer(datadir, namespace, readonly, freezerTableSize, chainFreezerTableConfigs, edb)
 	}
 	if err != nil {
 		return nil, err
