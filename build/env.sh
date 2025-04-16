@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/shd
 
 set -e
 
