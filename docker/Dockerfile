@@ -1,5 +1,5 @@
 FROM ubuntu:utopic
-MAINTAINER caktux
+MAINTAINER caktuxd
 
 ENV DEBIAN_FRONTEND noninteractive
 
